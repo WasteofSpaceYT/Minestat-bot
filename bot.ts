@@ -1,16 +1,23 @@
-import {Client, GatewayIntentBits, REST, Routes} from "discord.js"
-import {WebSocket, WebSocketServer} from "ws"
-import { config } from "dotenv"
+import {Client, GatewayIntentBits, PermissionsBitField, REST, Routes} from "discord.js"
+import {WebSocketServer} from "ws"
+import * as dotenv from "dotenv"
 import axios from "axios";
 
-const botToken = ""
-const channelID = ""
+dotenv.config()
+let port
+if(!Number.isNaN(parseInt(process.env.PORT!))) {
+    port = parseInt(process.env.PORT!)
+} else {
+    console.error("Invalid port in .env file")
+    process.exit(1)
+}
 
-let ws = new WebSocketServer({port: 6969});
+//@ts-ignore
+let ws = new WebSocketServer({port})
 ws.on("connection", (socket) => {
     socket.on("message", (data) => {
         console.log(data.toString());
-        client.channels.fetch("844682984506654774").then((channel) => {
+        client.channels.fetch(process.env.CHANNEL_ID!).then((channel) => {
             // @ts-ignore
             channel.send(data.toString());
         })
@@ -30,7 +37,7 @@ client.on("interactionCreate", async (interaction) => {
     // @ts-ignore
     if(!interaction.isCommand()) return;
     if(interaction.commandName === "status") {
-            await interaction.reply((await axios.get("http://localhost:6960/", {
+            await interaction.reply((await axios.get(`http://${process.env.SERVERHOST}:${process.env.SERVERPORT}`, {
                 method: "GET",
                 data: "playercount"
             })).status == 200 ? "Server is online!" : "Server is offline!");
@@ -38,7 +45,7 @@ client.on("interactionCreate", async (interaction) => {
     if(interaction.commandName === "playercount") {
         let playercount = "error";
             // make axios request to get playercount
-            let res = await axios.get("http://localhost:6960/", {
+            let res = await axios.get(`http://${process.env.SERVERHOST}:${process.env.SERVERPORT}`, {
                 method: "GET",
                 data: "playercount"
             })
@@ -49,8 +56,9 @@ client.on("interactionCreate", async (interaction) => {
     }
     if(interaction.commandName === "playerlist") {
         let playerlist = "error";
+        try {
             // make axios request to get playercount
-            let res = await axios.get("http://localhost:6960/", {
+            let res = await axios.get(`http://${process.env.SERVERHOST}:${process.env.SERVERPORT}`, {
                 method: "GET",
                 data: "playerlist"
             }) 
@@ -62,35 +70,42 @@ client.on("interactionCreate", async (interaction) => {
             } else {
             await interaction.reply(playerlist.toString());
             }
+        } catch (error) {
+            await interaction.reply("Error getting playerlist!");
+        }
     }
     console.log(interaction)
     if(interaction.commandName === "execute") {
-        if(interaction.user.id == "252588139401576448" || interaction.user.id == "333617780207124480"){
-            let res = await axios.get("http://localhost:6960/", {
+        // @ts-ignore
+        if(interaction.member!.permissions.has(PermissionsBitField.Flags.Administrator)){
+            try {
+            let res = await axios.get(`http://${process.env.SERVERHOST}:${process.env.SERVERPORT}`, {
                 method: "GET",
                 data: `execute ${interaction.options.get("command")!.value}`
             })
             await interaction.reply(res.data);
+        }catch (error) {
+            await interaction.reply("Error executing command!");
         }
-        await interaction.reply("test");
+    }
     }
 })
 
 client.on("messageCreate", async (message) => {
     if(message.author.bot) return;
-    if(message.channel.id == channelID){
-        axios.get("http://localhost:6960/", {
+    if(message.channel.id == process.env.CHANNEL_ID!){
+        axios.get(`http://${process.env.SERVERHOST}:${process.env.SERVERPORT}`, {
             method: "GET",
             data: `message <${message.author.username}> ${message.content}`
         }).catch((err) => {
-            console.log(err);
+            message.reply("Error sending message to server!");
         })
     }
 })
 
 
 // Discord bot login
-client.login(botToken)
+client.login(process.env.BTOKEN)
 
 // Discord bot slash commands
 const commands = [
@@ -122,22 +137,22 @@ const commands = [
   //@ts-ignore
   console.log(process.env.BOT_TOKEN)
   //@ts-ignore
-  const rest = new REST({ version: '10' }).setToken(botToken);
+  const rest = new REST({ version: '10' }).setToken(process.env.BTOKEN);
   
   (async () => {
     try {
       console.log('Started refreshing application (/) commands.');
   
-      await rest.put(Routes.applicationCommands("847552036852989993"), { body: commands });
+      await rest.put(Routes.applicationCommands(process.env.CLIENT_ID!), { body: commands });
   
       console.log('Successfully reloaded application (/) commands.');
     } catch (error) {
-      console.error(error);
+        console.error(error);
     }
   })();
-  axios.get("http://localhost:6960/", {
+  axios.get(`http://${process.env.SERVERHOST}:${process.env.SERVERPORT}`, {
         method: "GET",
         data: "wsconnect"
   }).catch((err) => {
-        console.log(err);
+        console.log("Server not up");
   })
