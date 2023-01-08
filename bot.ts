@@ -48,13 +48,13 @@ ws.on("connection", (socket) => {
             members.forEach((member) => {
               console.log(member.user.username);
               msg = msg.replace(word, `<@${member.user.id}>`);
-              resolve(msg);
             });
           }
         });
       }
+      resolve(msg);
     }).then((msg) => {
-        //@ts-ignore
+      //@ts-ignore
       channel.send(msg);
     });
   });
