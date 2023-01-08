@@ -223,6 +223,8 @@ const rest = new REST({ version: "10" }).setToken(process.env.BTOKEN);
     console.error(error);
   }
 })();
+while(process.env.SERVERHOST == undefined || process.env.SERVERPORT == undefined) {
+    setTimeout(() => {
 axios
   .get(`http://${process.env.SERVERHOST}:${process.env.SERVERPORT}`, {
     method: "GET",
@@ -232,3 +234,5 @@ axios
     console.log(err)
     console.log("Server not up");
   });
+}, 1000);
+}
