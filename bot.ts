@@ -229,5 +229,6 @@ axios
     data: "wsconnect",
   })
   .catch((err) => {
+    console.log(err)
     console.log("Server not up");
   });
