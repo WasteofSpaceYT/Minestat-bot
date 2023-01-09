@@ -1,6 +1,6 @@
 # Minestat-bot
 
-### This discord bot works with the [Minceraft counterpart]("https://github.com/WasteofSpaceYT/Minestat") to link chat with a channel in your server.
+### This discord bot works with the [Minceraft counterpart](https://github.com/WasteofSpaceYT/Minestat) to link chat with a channel in your server.
 
 # Install instructions
 * Clone this repository
